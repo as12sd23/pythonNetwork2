@@ -2,7 +2,8 @@ from socket import *
 from threading import *
 import time
 import struct
-
+from tkinter import filedialog
+import os
 
 fmt = '=4si'
 fmt_size = struct.calcsize(fmt)
@@ -15,8 +16,22 @@ def send(sock):
             send_data_header = struct.pack(fmt, b'mp00', len(sendData))
             sock.send(send_data_header + sendData.encode())
         elif sendData[0].lower() == 'f':
-            send_data_header = struct.pack(fmt, b'fp00', len(sendData))
-            sock.send(send_data_header + sendData.encode())
+            filepath = filedialog.askopenfilename()
+            filesize = os.path.getsize(filepath)
+            filepath = filepath.replace('/', '\\')
+            sock.send()
+            with open(filepath, 'wb') as f:
+                while True:
+                    data = f.read(1024)
+                    filesize = filesize - 1024
+                    if not data:
+                        break
+                    if filesize <= 0:
+                        send_data_header = struct.pack(fmt, b'fpe0', len(sendData))
+                    else:
+                        send_data_header = struct.pack(fmt, b'fpd0', len(sendData))
+                    sock.send(send_data_header + sendData.encode())
+                print('파일 전송 완료')
         
 
 def receive(sock):
